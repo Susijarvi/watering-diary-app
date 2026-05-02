@@ -1,0 +1,5 @@
+{
+  "resourcesResourceGroups": "rg-",
+  "storageStorageAccounts": "st",
+  "webStaticSites": "stapp-"
+}

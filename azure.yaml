@@ -1,0 +1,76 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: watering-diary-app
+metadata:
+  template: watering-diary-app@0.1.0
+
+services:
+  web:
+    project: .
+    dist: dist
+    language: ts
+    host: staticwebapp
+
+hooks:
+  preprovision:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "Preparing infrastructure for watering-diary-app..." -ForegroundColor Cyan
+    posix:
+      shell: sh
+      run: |
+        echo "Preparing infrastructure for watering-diary-app..."
+  postprovision:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host ""
+        Write-Host "===========================================================" -ForegroundColor Green
+        Write-Host " Provisioning complete." -ForegroundColor Green
+        Write-Host "===========================================================" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Static Web App URL:" -ForegroundColor Cyan
+        Write-Host "   https://$env:STATIC_WEB_APP_HOSTNAME"
+        Write-Host ""
+        if (-not $env:GOOGLE_CLIENT_ID -or $env:GOOGLE_CLIENT_ID -eq "") {
+          Write-Host "NEXT STEP — set up Google OAuth (one-time):" -ForegroundColor Yellow
+          Write-Host "1. Open https://console.cloud.google.com/apis/credentials"
+          Write-Host "2. Create OAuth 2.0 Client ID (Web application)"
+          Write-Host "3. Authorized redirect URI:"
+          Write-Host "   https://$env:STATIC_WEB_APP_HOSTNAME/.auth/login/google/callback"
+          Write-Host ""
+          Write-Host "4. Save the credentials and re-run azd:"
+          Write-Host "   azd env set GOOGLE_CLIENT_ID '<id>'"
+          Write-Host "   azd env set GOOGLE_CLIENT_SECRET '<secret>'"
+          Write-Host "   azd up"
+          Write-Host ""
+        } else {
+          Write-Host "Google OAuth credentials are configured. App is ready." -ForegroundColor Green
+        }
+    posix:
+      shell: sh
+      run: |
+        echo ""
+        echo "==========================================================="
+        echo " Provisioning complete."
+        echo "==========================================================="
+        echo ""
+        echo "Static Web App URL:"
+        echo "   https://$STATIC_WEB_APP_HOSTNAME"
+        echo ""
+        if [ -z "$GOOGLE_CLIENT_ID" ]; then
+          echo "NEXT STEP — set up Google OAuth (one-time):"
+          echo "1. Open https://console.cloud.google.com/apis/credentials"
+          echo "2. Create OAuth 2.0 Client ID (Web application)"
+          echo "3. Authorized redirect URI:"
+          echo "   https://$STATIC_WEB_APP_HOSTNAME/.auth/login/google/callback"
+          echo ""
+          echo "4. Save the credentials and re-run azd:"
+          echo "   azd env set GOOGLE_CLIENT_ID '<id>'"
+          echo "   azd env set GOOGLE_CLIENT_SECRET '<secret>'"
+          echo "   azd up"
+          echo ""
+        else
+          echo "Google OAuth credentials are configured. App is ready."
+        fi
