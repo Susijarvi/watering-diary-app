@@ -3,8 +3,7 @@ export interface DiaryEntry {
   hadDiaper: boolean;
   diaperWet: boolean | null;
   bedWet: boolean;
-  userEmail?: string;
-  userId?: string;
+  userEmail?: string;    // who last entered/edited this row
   updatedAt?: string;
 }
 

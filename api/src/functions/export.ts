@@ -1,6 +1,6 @@
 import { app, type HttpRequest, type HttpResponseInit } from '@azure/functions';
 import { getUser, isAdmin } from '../shared/auth';
-import { ensureTable, listAllEntries } from '../shared/storage';
+import { ensureTable, listEntries } from '../shared/storage';
 
 function csvField(v: unknown): string {
   if (v === null || v === undefined) return '';
@@ -19,7 +19,7 @@ export async function exportCsv(req: HttpRequest): Promise<HttpResponseInit> {
   }
 
   await ensureTable();
-  const rows = await listAllEntries();
+  const rows = await listEntries();
   rows.sort((a, b) => {
     const c = a.rowKey.localeCompare(b.rowKey);
     return c !== 0 ? c : (a.userEmail ?? '').localeCompare(b.userEmail ?? '');

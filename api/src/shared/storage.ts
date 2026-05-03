@@ -2,13 +2,17 @@ import { TableClient, odata, type TableEntity } from '@azure/data-tables';
 
 export const TABLE_NAME = 'DiaryEntries';
 
+// All entries belong to a single shared diary (one child) — both parent and
+// child see/edit the same rows. userEmail still records who entered each row.
+export const PARTITION_KEY = 'diary';
+
 export interface DiaryEntity extends TableEntity {
-  partitionKey: string;     // userId (Google sub)
+  partitionKey: string;     // always PARTITION_KEY
   rowKey: string;           // YYYY-MM-DD
   hadDiaper: boolean;
   diaperWet: boolean | null;
   bedWet: boolean;
-  userEmail: string;
+  userEmail: string;        // who entered this row
   updatedAt: string;
 }
 
@@ -31,22 +35,13 @@ export async function ensureTable(): Promise<void> {
   await client.createTable();
 }
 
-export async function listEntriesForUser(userId: string): Promise<DiaryEntity[]> {
+export async function listEntries(): Promise<DiaryEntity[]> {
   const client = getTableClient();
-  const filter = odata`PartitionKey eq ${userId}`;
+  const filter = odata`PartitionKey eq ${PARTITION_KEY}`;
   const out: DiaryEntity[] = [];
   for await (const entity of client.listEntities<DiaryEntity>({
     queryOptions: { filter },
   })) {
-    out.push(entity);
-  }
-  return out;
-}
-
-export async function listAllEntries(): Promise<DiaryEntity[]> {
-  const client = getTableClient();
-  const out: DiaryEntity[] = [];
-  for await (const entity of client.listEntities<DiaryEntity>()) {
     out.push(entity);
   }
   return out;

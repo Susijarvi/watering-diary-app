@@ -39,9 +39,7 @@ export function useEntries(enabled: boolean): EntriesState {
     async (entry: DiaryEntry) => {
       const saved = await saveEntry(entry);
       setEntries((prev) => {
-        const others = prev.filter(
-          (e) => !(e.date === saved.date && (e.userId ?? '') === (saved.userId ?? '')),
-        );
+        const others = prev.filter((e) => e.date !== saved.date);
         return [saved, ...others].sort((a, b) => b.date.localeCompare(a.date));
       });
     },

@@ -8,11 +8,11 @@ interface Row {
 
 interface Props {
   rows: Row[];
-  isAdmin: boolean;
+  isAdmin?: boolean;
   onSelect: (iso: string) => void;
 }
 
-export function EntryList({ rows, isAdmin, onSelect }: Props) {
+export function EntryList({ rows, onSelect }: Props) {
   if (rows.length === 0) {
     return <div className="rounded-xl bg-white p-6 text-center text-slate-500 ring-1 ring-slate-200">Ei merkintöjä</div>;
   }
@@ -20,7 +20,7 @@ export function EntryList({ rows, isAdmin, onSelect }: Props) {
   return (
     <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
       {rows.map((row) => (
-        <li key={row.date + (row.entry?.userId ?? '')}>
+        <li key={row.date}>
           <button
             onClick={() => onSelect(row.date)}
             className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 active:bg-slate-100"
@@ -29,8 +29,8 @@ export function EntryList({ rows, isAdmin, onSelect }: Props) {
             <span className="flex-1">
               <span className="block font-semibold text-slate-800">{formatFi(row.date)}</span>
               <span className="block text-sm text-slate-500">{statusText(row.entry)}</span>
-              {isAdmin && row.entry?.userEmail && (
-                <span className="block text-xs text-slate-400">{row.entry.userEmail}</span>
+              {row.entry?.userEmail && (
+                <span className="block text-xs text-slate-400">kirjasi {row.entry.userEmail}</span>
               )}
             </span>
             <span className="text-slate-400">›</span>

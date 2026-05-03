@@ -1,10 +1,10 @@
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
-import { getUser, isAdmin } from '../shared/auth';
+import { getUser } from '../shared/auth';
 import {
   ensureTable,
-  listAllEntries,
-  listEntriesForUser,
+  listEntries,
   upsertEntry,
+  PARTITION_KEY,
   type DiaryEntity,
 } from '../shared/storage';
 
@@ -29,9 +29,7 @@ export async function entries(
   await ensureTable();
 
   if (req.method === 'GET') {
-    const rows = isAdmin(user)
-      ? await listAllEntries()
-      : await listEntriesForUser(user.userId);
+    const rows = await listEntries();
 
     return {
       status: 200,
@@ -40,7 +38,6 @@ export async function entries(
         hadDiaper: r.hadDiaper,
         diaperWet: r.diaperWet,
         bedWet: r.bedWet,
-        userId: r.partitionKey,
         userEmail: r.userEmail,
         updatedAt: r.updatedAt,
       })),
@@ -72,7 +69,7 @@ export async function entries(
           : null;
 
     const entity: DiaryEntity = {
-      partitionKey: user.userId,
+      partitionKey: PARTITION_KEY,
       rowKey: body.date,
       hadDiaper: body.hadDiaper,
       diaperWet,
@@ -91,7 +88,6 @@ export async function entries(
         hadDiaper: entity.hadDiaper,
         diaperWet: entity.diaperWet,
         bedWet: entity.bedWet,
-        userId: entity.partitionKey,
         userEmail: entity.userEmail,
         updatedAt: entity.updatedAt,
       },
