@@ -9,7 +9,8 @@
     "prebuild": "npm run generate-icons",
     "build:web": "tsc && vite build",
     "build:api": "cd api && npm install --no-audit --no-fund && npm run build",
-    "build": "npm run build:web && npm run build:api",
+    "build": "npm run build:web",
+    "build:all": "npm run build:web && npm run build:api",
     "preview": "vite preview",
     "start": "swa start http://localhost:5173 --run \"npm run dev\" --api-location api"
   },

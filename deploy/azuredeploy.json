@@ -1,0 +1,181 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.42.1.51946",
+      "templateHash": "1259198405353139265"
+    }
+  },
+  "parameters": {
+    "appName": {
+      "type": "string",
+      "defaultValue": "kasteludiary",
+      "minLength": 2,
+      "maxLength": 20,
+      "metadata": {
+        "description": "Short name for the app, used as a prefix in resource names"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "westeurope",
+      "allowedValues": [
+        "westeurope",
+        "northeurope",
+        "swedencentral",
+        "francecentral",
+        "germanywestcentral",
+        "uksouth",
+        "eastus2",
+        "westus2"
+      ],
+      "metadata": {
+        "description": "Azure region for all resources"
+      }
+    },
+    "adminEmail": {
+      "type": "string",
+      "defaultValue": "mauri.jarvinen@gmail.com",
+      "metadata": {
+        "description": "Email of the admin user (gets the admin role and CSV export)"
+      }
+    },
+    "childEmail": {
+      "type": "string",
+      "defaultValue": "kauri.susijarvi@gmail.com",
+      "metadata": {
+        "description": "Email of the child user (gets the user role)"
+      }
+    },
+    "googleClientId": {
+      "type": "string",
+      "metadata": {
+        "description": "Google OAuth Client ID (from Google Cloud Console)"
+      }
+    },
+    "googleClientSecret": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Google OAuth Client Secret (from Google Cloud Console)"
+      }
+    },
+    "repositoryUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "GitHub repository URL, e.g. https://github.com/Susijarvi/watering-diary-app"
+      }
+    },
+    "branch": {
+      "type": "string",
+      "defaultValue": "main",
+      "metadata": {
+        "description": "Branch to deploy from"
+      }
+    },
+    "repositoryToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "GitHub Personal Access Token with repo + workflow scopes — SWA uses it to create a deploy workflow"
+      }
+    }
+  },
+  "variables": {
+    "resourceToken": "[toLower(uniqueString(resourceGroup().id, parameters('appName')))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "[format('st{0}', variables('resourceToken'))]",
+      "location": "[parameters('location')]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false,
+        "supportsHttpsTrafficOnly": true,
+        "accessTier": "Hot"
+      },
+      "tags": {
+        "app": "[parameters('appName')]"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/tableServices",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}', format('st{0}', variables('resourceToken')), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}', variables('resourceToken')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}/{2}', format('st{0}', variables('resourceToken')), 'default', 'DiaryEntries')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/tableServices', format('st{0}', variables('resourceToken')), 'default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/staticSites",
+      "apiVersion": "2024-04-01",
+      "name": "[format('stapp-{0}-{1}', parameters('appName'), variables('resourceToken'))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Free",
+        "tier": "Free"
+      },
+      "properties": {
+        "repositoryUrl": "[parameters('repositoryUrl')]",
+        "branch": "[parameters('branch')]",
+        "repositoryToken": "[parameters('repositoryToken')]",
+        "buildProperties": {
+          "appLocation": "/",
+          "apiLocation": "api",
+          "outputLocation": "dist"
+        }
+      },
+      "tags": {
+        "app": "[parameters('appName')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/staticSites/config",
+      "apiVersion": "2024-04-01",
+      "name": "[format('{0}/{1}', format('stapp-{0}-{1}', parameters('appName'), variables('resourceToken')), 'appsettings')]",
+      "properties": {
+        "AZURE_STORAGE_CONNECTION_STRING": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', format('st{0}', variables('resourceToken')), listKeys(resourceId('Microsoft.Storage/storageAccounts', format('st{0}', variables('resourceToken'))), '2023-05-01').keys[0].value, environment().suffixes.storage)]",
+        "ADMIN_EMAIL": "[parameters('adminEmail')]",
+        "CHILD_EMAIL": "[parameters('childEmail')]",
+        "GOOGLE_CLIENT_ID": "[parameters('googleClientId')]",
+        "GOOGLE_CLIENT_SECRET": "[parameters('googleClientSecret')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}', variables('resourceToken')))]",
+        "[resourceId('Microsoft.Web/staticSites', format('stapp-{0}-{1}', parameters('appName'), variables('resourceToken')))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "webAppUrl": {
+      "type": "string",
+      "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/staticSites', format('stapp-{0}-{1}', parameters('appName'), variables('resourceToken'))), '2024-04-01').defaultHostname)]"
+    },
+    "staticWebAppName": {
+      "type": "string",
+      "value": "[format('stapp-{0}-{1}', parameters('appName'), variables('resourceToken'))]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[format('st{0}', variables('resourceToken'))]"
+    },
+    "googleRedirectUri": {
+      "type": "string",
+      "value": "[format('https://{0}/.auth/login/google/callback', reference(resourceId('Microsoft.Web/staticSites', format('stapp-{0}-{1}', parameters('appName'), variables('resourceToken'))), '2024-04-01').defaultHostname)]"
+    }
+  }
+}
