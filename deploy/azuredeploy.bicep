@@ -1,8 +1,10 @@
 // Azure Resource Manager template for one-click "Deploy to Azure".
 // Provisions Storage Account + Table + Static Web App (linked to GitHub repo).
 //
-// SWA reads the GitHub PAT, creates a workflow file in the repo, and the
-// workflow then builds + deploys the app on every push to the chosen branch.
+// Authentication is custom Google Sign-In (Google Identity Services + signed
+// session cookie). SWA's built-in auth is NOT used — only GOOGLE_CLIENT_ID is
+// needed (no client secret), plus an auto-generated SESSION_SECRET for signing
+// session cookies.
 
 @description('Short name for the app, used as a prefix in resource names')
 @minLength(2)
@@ -28,12 +30,12 @@ param adminEmail string = 'mauri.jarvinen@gmail.com'
 @description('Email of the child user (gets the user role)')
 param childEmail string = 'kauri.susijarvi@gmail.com'
 
-@description('Google OAuth Client ID (from Google Cloud Console)')
+@description('Google OAuth Client ID (from Google Cloud Console). Client secret NOT needed — we only validate ID tokens.')
 param googleClientId string
 
-@description('Google OAuth Client Secret (from Google Cloud Console)')
+@description('Auto-generated session signing secret. Leave default to generate a new one. Changing this invalidates active sessions.')
 @secure()
-param googleClientSecret string
+param sessionSecret string = newGuid()
 
 @description('GitHub repository URL, e.g. https://github.com/Susijarvi/watering-diary-app')
 param repositoryUrl string
@@ -101,11 +103,11 @@ resource swaAppSettings 'Microsoft.Web/staticSites/config@2024-04-01' = {
     ADMIN_EMAIL: adminEmail
     CHILD_EMAIL: childEmail
     GOOGLE_CLIENT_ID: googleClientId
-    GOOGLE_CLIENT_SECRET: googleClientSecret
+    SESSION_SECRET: sessionSecret
   }
 }
 
 output webAppUrl string = 'https://${swa.properties.defaultHostname}'
 output staticWebAppName string = swa.name
 output storageAccountName string = storage.name
-output googleRedirectUri string = 'https://${swa.properties.defaultHostname}/.auth/login/google/callback'
+output googleAuthorizedJavascriptOrigin string = 'https://${swa.properties.defaultHostname}'

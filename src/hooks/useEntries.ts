@@ -11,12 +11,13 @@ interface EntriesState {
   byDate: (iso: string) => DiaryEntry | undefined;
 }
 
-export function useEntries(): EntriesState {
+export function useEntries(enabled: boolean): EntriesState {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
+    if (!enabled) return;
     setLoading(true);
     setError(null);
     try {
@@ -28,11 +29,11 @@ export function useEntries(): EntriesState {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    if (enabled) void reload();
+  }, [enabled, reload]);
 
   const save = useCallback(
     async (entry: DiaryEntry) => {

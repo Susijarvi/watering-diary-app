@@ -8,11 +8,11 @@ import { todayIso } from './lib/dates';
 import type { DiaryEntry } from './lib/types';
 
 export default function App() {
-  const { auth, loading, isAdmin } = useAuth();
-  const entries = useEntries();
+  const auth = useAuth();
+  const entries = useEntries(auth.user !== null);
   const [editingDate, setEditingDate] = useState<string | null>(null);
 
-  if (loading) {
+  if (auth.loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-slate-500">Ladataan…</div>
@@ -20,8 +20,13 @@ export default function App() {
     );
   }
 
-  if (!auth) {
-    return <LoginPage />;
+  if (!auth.user) {
+    return (
+      <LoginPage
+        googleClientId={auth.googleClientId}
+        onCredential={auth.loginWithCredential}
+      />
+    );
   }
 
   if (editingDate) {
@@ -44,8 +49,9 @@ export default function App() {
 
   return (
     <MainView
-      auth={auth}
-      isAdmin={isAdmin}
+      user={auth.user}
+      isAdmin={auth.isAdmin}
+      onLogout={auth.logout}
       entries={entries.entries}
       loading={entries.loading}
       error={entries.error}

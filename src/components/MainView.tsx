@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import type { AuthInfo, DiaryEntry } from '../lib/types';
-import { exportCsvUrl, logoutUrl } from '../lib/api';
+import type { AuthUser, DiaryEntry } from '../lib/types';
+import { exportCsvUrl } from '../lib/api';
 import { addDays, formatFi, listLastDays, todayIso } from '../lib/dates';
 import { EntryList } from './EntryList';
 
 interface Props {
-  auth: AuthInfo;
+  user: AuthUser;
   isAdmin: boolean;
+  onLogout: () => Promise<void>;
   entries: DiaryEntry[];
   loading: boolean;
   error: string | null;
@@ -18,8 +19,9 @@ interface Props {
 const RECENT_DAYS = 30;
 
 export function MainView({
-  auth,
+  user,
   isAdmin,
+  onLogout,
   entries,
   loading,
   error,
@@ -32,7 +34,6 @@ export function MainView({
   const today = todayIso();
   const todayEntry = entries.find((e) => e.date === today);
 
-  // Combine real entries with missing days for last N days, plus older entries.
   const recentDays = useMemo(() => listLastDays(RECENT_DAYS), []);
   const recentEntryByDate = useMemo(() => {
     const m = new Map<string, DiaryEntry>();
@@ -56,11 +57,14 @@ export function MainView({
       <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-b from-brand-700 to-brand-600 px-5 pb-4 pt-[max(env(safe-area-inset-top),1rem)] text-white shadow-lg">
         <div>
           <div className="text-xs text-brand-100">🌙 Kastelupäiväkirja</div>
-          <div className="text-sm font-medium">{auth.userDetails}</div>
+          <div className="text-sm font-medium">{user.email}</div>
         </div>
-        <a href={logoutUrl()} className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/10">
+        <button
+          onClick={() => void onLogout()}
+          className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-white/10"
+        >
           Kirjaudu ulos
-        </a>
+        </button>
       </header>
 
       <main className="space-y-6 px-4 py-6">

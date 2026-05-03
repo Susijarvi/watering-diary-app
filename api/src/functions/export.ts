@@ -1,5 +1,5 @@
 import { app, type HttpRequest, type HttpResponseInit } from '@azure/functions';
-import { getClientPrincipal, isAdmin } from '../shared/auth';
+import { getUser, isAdmin } from '../shared/auth';
 import { ensureTable, listAllEntries } from '../shared/storage';
 
 function csvField(v: unknown): string {
@@ -10,11 +10,11 @@ function csvField(v: unknown): string {
 }
 
 export async function exportCsv(req: HttpRequest): Promise<HttpResponseInit> {
-  const principal = getClientPrincipal(req);
-  if (!principal) {
+  const user = await getUser(req);
+  if (!user) {
     return { status: 401, body: 'Not authenticated' };
   }
-  if (!isAdmin(principal)) {
+  if (!isAdmin(user)) {
     return { status: 403, body: 'Forbidden' };
   }
 

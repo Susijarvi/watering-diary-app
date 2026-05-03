@@ -8,13 +8,15 @@ export interface DiaryEntry {
   updatedAt?: string;
 }
 
-export interface AuthInfo {
+export interface AuthUser {
   userId: string;
-  userDetails: string;   // email
-  identityProvider: string;
-  userRoles: string[];
+  email: string;
+  role: 'admin' | 'user';
+  name?: string;
+  picture?: string;
 }
 
-export interface ClientPrincipal {
-  clientPrincipal: AuthInfo | null;
+export interface AuthMeResponse {
+  user: AuthUser | null;
+  googleClientId: string | null;
 }

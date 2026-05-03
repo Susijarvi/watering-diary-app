@@ -1,31 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/staticwebapp.config.json",
-  "auth": {
-    "rolesSource": "/api/auth/roles",
-    "identityProviders": {
-      "google": {
-        "registration": {
-          "clientIdSettingName": "GOOGLE_CLIENT_ID",
-          "clientSecretSettingName": "GOOGLE_CLIENT_SECRET"
-        }
-      }
-    }
-  },
-  "routes": [
-    { "route": "/api/auth/roles", "allowedRoles": ["anonymous", "authenticated"] },
-    { "route": "/.auth/login/twitter", "statusCode": 404 },
-    { "route": "/.auth/login/aad", "statusCode": 404 },
-    { "route": "/.auth/login/github", "statusCode": 404 },
-    { "route": "/api/export", "allowedRoles": ["admin"] },
-    { "route": "/api/*", "allowedRoles": ["admin", "user"] },
-    { "route": "/*", "allowedRoles": ["anonymous", "admin", "user"] }
-  ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/api/*", "/.auth/*", "/assets/*", "/*.{png,svg,ico,webmanifest,js,css}"]
-  },
-  "responseOverrides": {
-    "401": { "redirect": "/.auth/login/google", "statusCode": 302 }
+    "exclude": ["/api/*", "/assets/*", "/*.{png,svg,ico,webmanifest,js,css,map}"]
   },
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",

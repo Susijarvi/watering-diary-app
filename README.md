@@ -12,11 +12,11 @@ vanhempi näkee kaikki merkinnät ja voi exportata CSV:ksi.
 Klikkaa nappia → täytä lomake Azure Portalissa → Deploy → ~5 minuutissa valmis.
 
 ### Mitä tarvitset
-- **Azure-tilaus** (ilmainen tier riittää)
+- **Azure-tilaus** (ilmainen tier riittää, ~0 €/kk)
 - **GitHub Personal Access Token** — luo täällä: https://github.com/settings/tokens/new
   - Scopet: `repo`, `workflow`
-  - Expiration: 30 päivää tai pidempi
-- **Google OAuth Client** — ohjeet alla (luo ennen Deploy-nappia, koska redirect URL tarvitsee SWA:n osoitteen — tai käytä alla olevaa kahden vaiheen ohjetta)
+  - Expiration: 90 päivää tai pidempi
+- **Google OAuth Client ID** — ohjeet alla (vain Client ID tarvitaan, ei secretia)
 
 ### Suositeltu järjestys
 
@@ -28,37 +28,50 @@ Lomakkeessa täytä:
 - **App Name**: `kasteludiary` (tai oma valinta)
 - **Admin Email**: `mauri.jarvinen@gmail.com`
 - **Child Email**: `kauri.susijarvi@gmail.com`
-- **Google Client Id / Secret**: jätä tyhjäksi tai laita placeholder (`pending`) — täydennetään myöhemmin
+- **Google Client Id**: laita placeholder (`pending`) — täydennetään kohdassa 3
+- **Session Secret**: jätä oletus (auto-generoitu)
 - **Repository Url**: `https://github.com/Susijarvi/watering-diary-app`
 - **Branch**: `main`
 - **Repository Token**: GitHub PAT yltä
 
 Klikkaa **Review + create** → **Create**. Provisiointi kestää ~3 min.
 
-Provisioinnin jälkeen Resource Groupin `Outputs`-välilehdellä näet:
-- `webAppUrl` — sovelluksen osoite
-- `googleRedirectUri` — käytä tätä Google OAuth -konfiguraatiossa
+Provisioinnin jälkeen → Resource Group → **Deployments** → uusin deployment →
+**Outputs** → näet:
+- `webAppUrl` — sovelluksen osoite (esim. `https://stapp-kasteludiary-abc123.azurestaticapps.net`)
+- `googleAuthorizedJavascriptOrigin` — käytä tätä Google OAuth -konfiguraatiossa
 
 #### 2. Luo Google OAuth Client
-- https://console.cloud.google.com/apis/credentials → **Create Credentials** → **OAuth Client ID**
+- Mene → https://console.cloud.google.com/apis/credentials
+- **Create Credentials** → **OAuth Client ID**
 - Application type: **Web application**
-- Authorized redirect URI: `<googleRedirectUri Outputseista>`
-  - Esim. `https://stapp-kasteludiary-abc123.azurestaticapps.net/.auth/login/google/callback`
-- Authorized JavaScript origin: `https://stapp-kasteludiary-abc123.azurestaticapps.net`
-- Kopioi **Client ID** ja **Client Secret**
+- Name: `Kastelupäiväkirja`
+- **Authorized JavaScript origins**:
+  ```
+  https://<webAppUrl Outputseista>
+  ```
+- **Authorized redirect URIs**: jätä tyhjäksi (emme käytä redirect-flow:ta)
+- Klikkaa **Create**
+- Kopioi **Client ID** (esim. `123456789-abcd.apps.googleusercontent.com`)
 
-#### 3. Aseta OAuth-credit Static Web Appiin
-Mene **Azure Portal** → Resource group → SWA → **Configuration** → **Application settings**:
-- Päivitä `GOOGLE_CLIENT_ID` ja `GOOGLE_CLIENT_SECRET`
-- Klikkaa **Save**
+> Client Secret EI ole tarpeen — käytämme Google Identity Services -kirjastoa joka
+> palauttaa ID tokenin suoraan selaimelle, ei käytä server-puolen token exchange -flow:ta.
+
+#### 3. Päivitä Google Client ID Static Web Appiin
+**Azure Portal** → Resource group → Static Web App → **Environment variables**
+(tai vanhempi UI: Configuration → Application settings):
+- Etsi `GOOGLE_CLIENT_ID`, klikkaa Edit, vaihda arvoksi yltä kopioitu Client ID
+- **Save**
 
 #### 4. Avaa sovellus ja kirjaudu Googlella
 
-GitHub Actions on saattanut jo deployata appin. Tarkista:
+Tarkista että GitHub Actions on deployannut koodin:
 - https://github.com/Susijarvi/watering-diary-app/actions
 
-Sovellus löytyy osoitteesta `webAppUrl`. Asenna PWA puhelimelle Chromen tai Safarin
-"Lisää aloitusnäyttöön" -toiminnolla.
+Avaa sovellus `webAppUrl`-osoitteesta. Klikkaa "Sign in with Google" → kirjaudu
+sallitulla Gmail-tunnuksella → pääset sisään.
+
+Asenna PWA puhelimelle: Chrome/Safari → "Lisää aloitusnäyttöön".
 
 ---
 
@@ -94,7 +107,7 @@ Application settings → muokkaa → Save.
 | API | Azure Functions v4 (Node 20, TypeScript) |
 | Tietokanta | Azure Table Storage |
 | Frontend | React 18 + Vite + TailwindCSS |
-| Auth | Google OAuth (SWA built-in) |
+| Auth | Google Identity Services + signed session cookie (HS256, 7d) |
 | Infra | Bicep (deploy/azuredeploy.bicep) |
 | Deploy | GitHub Actions (auto-luotu SWA:n toimesta) |
 

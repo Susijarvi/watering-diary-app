@@ -1,27 +1,50 @@
-import { useEffect, useState } from 'react';
-import { fetchAuth } from '../lib/api';
-import type { AuthInfo } from '../lib/types';
+import { useCallback, useEffect, useState } from 'react';
+import { fetchAuth, logout as apiLogout, loginWithGoogleCredential } from '../lib/api';
+import type { AuthUser } from '../lib/types';
 
 interface AuthState {
-  auth: AuthInfo | null;
+  user: AuthUser | null;
+  googleClientId: string | null;
   loading: boolean;
   isAdmin: boolean;
+  loginWithCredential: (credential: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 export function useAuth(): AuthState {
-  const [auth, setAuth] = useState<AuthInfo | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAuth()
-      .then((p) => setAuth(p.clientPrincipal))
-      .catch(() => setAuth(null))
+      .then((data) => {
+        setUser(data.user);
+        setGoogleClientId(data.googleClientId);
+      })
+      .catch(() => {
+        setUser(null);
+        setGoogleClientId(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
+  const loginWithCredential = useCallback(async (credential: string) => {
+    const u = await loginWithGoogleCredential(credential);
+    setUser(u);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await apiLogout();
+    setUser(null);
+  }, []);
+
   return {
-    auth,
+    user,
+    googleClientId,
     loading,
-    isAdmin: auth?.userRoles?.includes('admin') ?? false,
+    isAdmin: user?.role === 'admin',
+    loginWithCredential,
+    logout,
   };
 }

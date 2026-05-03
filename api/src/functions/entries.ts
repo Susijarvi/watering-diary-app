@@ -1,5 +1,5 @@
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
-import { getClientPrincipal, isAdmin } from '../shared/auth';
+import { getUser, isAdmin } from '../shared/auth';
 import {
   ensureTable,
   listAllEntries,
@@ -21,17 +21,17 @@ export async function entries(
   req: HttpRequest,
   ctx: InvocationContext,
 ): Promise<HttpResponseInit> {
-  const principal = getClientPrincipal(req);
-  if (!principal) {
+  const user = await getUser(req);
+  if (!user) {
     return { status: 401, jsonBody: { error: 'Not authenticated' } };
   }
 
   await ensureTable();
 
   if (req.method === 'GET') {
-    const rows = isAdmin(principal)
+    const rows = isAdmin(user)
       ? await listAllEntries()
-      : await listEntriesForUser(principal.userId);
+      : await listEntriesForUser(user.userId);
 
     return {
       status: 200,
@@ -72,17 +72,17 @@ export async function entries(
           : null;
 
     const entity: DiaryEntity = {
-      partitionKey: principal.userId,
+      partitionKey: user.userId,
       rowKey: body.date,
       hadDiaper: body.hadDiaper,
       diaperWet,
       bedWet: body.bedWet,
-      userEmail: principal.userDetails,
+      userEmail: user.email,
       updatedAt: new Date().toISOString(),
     };
 
     await upsertEntry(entity);
-    ctx.log(`Upserted entry user=${principal.userDetails} date=${body.date}`);
+    ctx.log(`Upserted entry user=${user.email} date=${body.date}`);
 
     return {
       status: 200,
