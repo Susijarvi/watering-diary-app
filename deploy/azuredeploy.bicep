@@ -24,11 +24,11 @@ param appName string = 'kasteludiary'
 ])
 param location string = 'westeurope'
 
-@description('Email of the admin user (gets the admin role and CSV export)')
-param adminEmail string = 'mauri.jarvinen@gmail.com'
+@description('Email of the admin user — gets the admin role and CSV export')
+param adminEmail string
 
-@description('Email of the child user (gets the user role)')
-param childEmail string = 'kauri.susijarvi@gmail.com'
+@description('Email of the secondary user — gets the user role')
+param childEmail string
 
 @description('Google OAuth Client ID (from Google Cloud Console). Client secret NOT needed — we only validate ID tokens.')
 param googleClientId string

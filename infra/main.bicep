@@ -10,10 +10,10 @@ param environmentName string
 param location string
 
 @description('Email of the admin user (gets admin role)')
-param adminEmail string = 'mauri.jarvinen@gmail.com'
+param adminEmail string
 
-@description('Email of the child user (gets user role)')
-param childEmail string = 'kauri.susijarvi@gmail.com'
+@description('Email of the secondary user (gets user role)')
+param childEmail string
 
 @description('Google OAuth Client ID (from Google Cloud Console). Empty until OAuth is created.')
 param googleClientId string = ''

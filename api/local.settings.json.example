@@ -5,8 +5,8 @@
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
     "AZURE_STORAGE_CONNECTION_STRING": "UseDevelopmentStorage=true",
-    "ADMIN_EMAIL": "mauri.jarvinen@gmail.com",
-    "CHILD_EMAIL": "kauri.susijarvi@gmail.com",
+    "ADMIN_EMAIL": "your-admin@example.com",
+    "CHILD_EMAIL": "your-user@example.com",
     "GOOGLE_CLIENT_ID": "<your-google-oauth-client-id.apps.googleusercontent.com>",
     "SESSION_SECRET": "dev-only-replace-me-with-32-random-chars-or-more"
   }

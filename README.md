@@ -26,8 +26,8 @@ Lomakkeessa täytä:
 - **Resource group**: `Create new` → esim. `kastelupaivakirja-rg`
 - **Region**: `westeurope` tai `swedencentral`
 - **App Name**: `kasteludiary` (tai oma valinta)
-- **Admin Email**: `mauri.jarvinen@gmail.com`
-- **Child Email**: `kauri.susijarvi@gmail.com`
+- **Admin Email**: sähköposti joka saa admin-roolin (CSV-export)
+- **Child Email**: sähköposti joka saa user-roolin (peruskäyttäjä)
 - **Google Client Id**: laita placeholder (`pending`) — täydennetään kohdassa 3
 - **Session Secret**: jätä oletus (auto-generoitu)
 - **Repository Url**: `https://github.com/Susijarvi/watering-diary-app`
@@ -77,16 +77,19 @@ Asenna PWA puhelimelle: Chrome/Safari → "Lisää aloitusnäyttöön".
 
 ## Käyttöoikeudet
 
-| Käyttäjä | Sähköposti | Roolit | Pääsy |
-|---|---|---|---|
-| Vanhempi | mauri.jarvinen@gmail.com | `admin` | Omat + lapsen merkinnät, CSV-export |
-| Lapsi | kauri.susijarvi@gmail.com | `user` | Omat merkinnät |
-| Muu | — | — | Pääsy estetty |
+| Rooli | Asetus | Pääsy |
+|---|---|---|
+| Admin | `ADMIN_EMAIL` (asetetaan deploy-vaiheessa) | Kaikki merkinnät, CSV-export |
+| User | `CHILD_EMAIL` (asetetaan deploy-vaiheessa) | Kaikki merkinnät |
+| Muu | — | Pääsy estetty (login palauttaa 403) |
 
-Sähköpostit asetetaan Bicep-templaatissa
-(`deploy/azuredeploy.bicep`) ja päätyvät Static Web Appin App Settings -arvoiksi
-(`ADMIN_EMAIL`, `CHILD_EMAIL`), joita SWA:n roles-funktio
-(`api/src/functions/roles.ts`) käyttää roolituksessa.
+Sähköpostit annetaan Deploy to Azure -lomakkeella ja päätyvät Static Web Appin
+Application Settings -arvoiksi (`ADMIN_EMAIL`, `CHILD_EMAIL`). Backend
+(`api/src/shared/auth.ts:emailToRole`) vertaa sisäänkirjautuvan käyttäjän
+sähköpostia näihin ja päättää roolin (admin / user / pääsy estetty).
+
+Sähköpostien päivitys jälkikäteen: Azure Portal → Static Web App →
+Environment variables → muokkaa → Save.
 
 ---
 

@@ -9,10 +9,10 @@
       "value": "${AZURE_LOCATION}"
     },
     "adminEmail": {
-      "value": "${ADMIN_EMAIL=mauri.jarvinen@gmail.com}"
+      "value": "${ADMIN_EMAIL}"
     },
     "childEmail": {
-      "value": "${CHILD_EMAIL=kauri.susijarvi@gmail.com}"
+      "value": "${CHILD_EMAIL}"
     },
     "googleClientId": {
       "value": "${GOOGLE_CLIENT_ID=}"
